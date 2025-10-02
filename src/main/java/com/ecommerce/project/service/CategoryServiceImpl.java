@@ -13,7 +13,7 @@ import java.util.Optional;
 
 
 @Service
-public class CategoryServiceImpl implements CategoryService{
+public class CategoryServiceImpl implements CategoryService {
 //    private long nextId = 1l;
 //    private List<Category> categories = new ArrayList<>();
     @Autowired
@@ -32,9 +32,9 @@ public class CategoryServiceImpl implements CategoryService{
 
     @Override
     public String deleteCategory(long categoryId) {
-        List <Category> categories = categoryReopsitory.findAll();
+        Optional <Category> savedCategoryOptional = categoryReopsitory.findById(categoryId);
 
-        Category category = categories.stream().filter(c -> c.getCategoryId().equals(categoryId)).findFirst().orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Resource not found"));
+        Category category = savedCategoryOptional.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Resource not found"));
 
         categoryReopsitory.delete(category);
         return "Category with categoryId: " + categoryId + " deleted successfully...";
@@ -42,17 +42,12 @@ public class CategoryServiceImpl implements CategoryService{
 
     @Override
     public Category updateCategory(Category category, Long categoryId) {
-        List <Category> categories = categoryReopsitory.findAll();
-        // can do it in the same way as the deleteCategory().
-        Optional <Category> categoryOptional = categories.stream().filter(c -> c.getCategoryId().equals(categoryId)).findFirst();
-        if(categoryOptional.isPresent()) {
-            Category existingCategory = categoryOptional.get();
-            existingCategory.setCategoryName(category.getCategoryName());
-            Category saveCategory = categoryReopsitory.save(existingCategory);
-            return saveCategory;
-        }
-        else {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Resource not found!");
-        }
+        Optional<Category> savedCategoryOptional = categoryReopsitory.findById(categoryId);
+
+        Category savedCategory = savedCategoryOptional.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Resource not found"));
+
+        category.setCategoryId(categoryId);
+        savedCategory = categoryReopsitory.save(category);
+        return savedCategory;
     }
 }
